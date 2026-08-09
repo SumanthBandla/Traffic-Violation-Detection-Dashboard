@@ -25,7 +25,14 @@ export async function apiFetch(path, { method = 'GET', body, token } = {}) {
   })
 
   if (res.status === 401) {
-    throw new Error('Session expired. Please log in again.')
+    let detail = ''
+    try {
+      const data = await res.json()
+      detail = data.detail || ''
+    } catch {
+      /* ignore */
+    }
+    throw new Error(detail || 'Session expired. Please log in again.')
   }
   if (!res.ok) {
     let detail = res.statusText

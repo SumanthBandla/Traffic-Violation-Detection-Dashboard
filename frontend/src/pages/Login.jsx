@@ -10,6 +10,16 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const friendlyError = (msg) => {
+    const m = String(msg || '')
+    if (/incorrect username or password/i.test(m))
+      return 'Incorrect username or password. Check your credentials and try again.'
+    if (/account disabled/i.test(m)) return 'This account is disabled. Contact your administrator.'
+    if (/cannot reach the server/i.test(m)) return 'Cannot reach the server. Is the backend running?'
+    if (/session expired/i.test(m)) return 'Session expired. Please log in again.'
+    return m || 'Login failed. Please try again.'
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     setError('')
@@ -18,7 +28,7 @@ export default function Login() {
       await login(username, password)
       navigate('/')
     } catch (err) {
-      setError(err.message)
+      setError(friendlyError(err.message))
     } finally {
       setLoading(false)
     }
@@ -29,12 +39,19 @@ export default function Login() {
       <form className="login-card" onSubmit={submit}>
         <h1>Traffic Violation Detection</h1>
         <p>Sign in to the monitoring dashboard</p>
-        {error && <div className="error-box">{error}</div>}
+        {error && (
+          <div className="error-box" role="alert">
+            {error}
+          </div>
+        )}
         <div className="form-row">
           <label>Username</label>
           <input
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => {
+              setUsername(e.target.value)
+              if (error) setError('')
+            }}
             autoComplete="username"
             required
           />
@@ -44,7 +61,10 @@ export default function Login() {
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              if (error) setError('')
+            }}
             autoComplete="current-password"
             required
           />
