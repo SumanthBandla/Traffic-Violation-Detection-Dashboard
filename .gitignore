@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Environment / secrets
+.env
+*.local
+
+# Models & weights
+*.pt
+*.onnx
+backend/weights/
+
+# Evidence / media
+storage/
+backend/storage/
+*.mp4
+*.avi
+!demo*.mp4
+
+# Node
+node_modules/
+frontend/dist/
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
