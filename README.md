@@ -45,6 +45,53 @@ This repository contains the backend and web dashboard:
 3. **Violations:** when the violation engine fires, the backend stores the event **and** evidence image (via the existing evidence system) and broadcasts it to the dashboard.
 4. **Quantum control:** mobile camera detections contribute vehicle counts to intersection demand, feeding the quantum-inspired optimisation simulation.
 
+## Deployment
+
+The project is deployed in two parts because Vercel serverless cannot host
+WebSockets or persistent storage:
+
+| Part | Host | URL |
+| ---- | ---- | --- |
+| Frontend (React dashboard) | **Vercel** | https://frontend-lime-pi-77.vercel.app |
+| Backend (FastAPI + WebSockets + Postgres) | **Render** (Blueprint) | *(set after deploy)* |
+
+### Backend → Render (Blueprint)
+
+1. Create a free account at https://dashboard.render.com.
+2. **New + → Blueprint** and connect the `Traffic-Violation-Detection-Dashboard` GitHub repo.
+3. Render reads `render.yaml` and provisions:
+   - `traffic-backend` web service (`runtime: docker`, `rootDir: backend`)
+   - `traffic-db` PostgreSQL database
+   - a persistent disk mounted at `/var/data` for evidence files
+4. Click **Apply**, wait for the build, then note the backend URL
+   (e.g. `https://traffic-backend.onrender.com`).
+5. Default logins (seeded automatically): `admin/admin123`, `officer/officer123`, `analyst/analyst123`.
+
+> **Free-tier caveats:** services spin down after ~15 min idle (first request
+> wakes them) and free Postgres is suspended after 90 days. Upgrade plans for
+> production use.
+
+### Frontend → Vercel
+
+```bash
+cd frontend
+npm install
+npx vercel login          # one-time
+npx vercel deploy --prod  # or connect the repo in the Vercel dashboard
+```
+
+Set the `VITE_API_URL` build-time environment variable to the deployed backend
+URL (e.g. `https://traffic-backend.onrender.com`) so the dashboard talks to the
+live API. `frontend/vercel.json` adds an SPA rewrite so React Router works
+directly at the root domain.
+
+### Wiring frontend ↔ backend
+
+- Add the frontend origin to the backend `CORS_ORIGINS` env var
+  (a comma-separated list or JSON array, e.g. `["https://frontend-lime-pi-77.vercel.app"]`).
+- The frontend sends REST + WebSocket (`wss://`) traffic to `VITE_API_URL`
+  automatically via `frontend/src/api/client.js`.
+
 ## Getting Started
 
 ### Option 1: Docker Compose
